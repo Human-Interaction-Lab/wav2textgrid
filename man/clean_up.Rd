@@ -11,7 +11,8 @@ clean_up(
   remove_partial,
   hyphen,
   remove_apostrophe,
-  remove_punct
+  remove_punct,
+  lowercase
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ clean_up(
 \item{remove_apostrophe}{Should all apostraphes be removed? Default is FALSE.}
 
 \item{remove_punct}{Should all punctuation be removed (other than hyphens and apostrophes)? Default is FALSE.}
+
+\item{lowercase}{Should all text be lowercase? Default is FALSE.}
 }
 \description{
 Cleans up the data to get it ready for making

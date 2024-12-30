@@ -10,6 +10,7 @@
 #' @param hyphen Should hyphens be retained or replaced? Options are "space" (hyphens are replaced with a space), "keep" (the hyphens are retained), "remove" the hyphens are removed with no white space added.
 #' @param remove_apostrophe Should all apostraphes be removed? Default is FALSE.
 #' @param remove_punct Should all punctuation be removed (other than hyphens and apostrophes)? Default is FALSE.
+#' @param lowercase Should all text be lowercase? Default is FALSE.
 #'
 #' @importFrom reticulate import
 #' @importFrom purrr map
@@ -28,7 +29,7 @@
 #' @importFrom english english
 #'
 #' @export
-clean_up <- function(whispered1, whispered2, folder, remove_partial, hyphen, remove_apostrophe, remove_punct){
+clean_up <- function(whispered1, whispered2, folder, remove_partial, hyphen, remove_apostrophe, remove_punct, lowercase){
   # grab segments
   # grab segments
   chan1 = purrr::map(whispered1, ~.x[["segments"]])
@@ -122,6 +123,8 @@ clean_up <- function(whispered1, whispered2, folder, remove_partial, hyphen, rem
     final$text = gsub("\\'", "", final$text)
   if (remove_punct)
     final$text = gsub("[^[:alnum:]'\\s-]", " ", final$text)
+  if (lowercase)
+    final$text = tolower(final$text)
 
   # clean up
   final$text = stringr::str_squish(final$text)

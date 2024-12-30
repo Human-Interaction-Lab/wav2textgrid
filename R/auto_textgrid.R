@@ -20,6 +20,7 @@
 #' @param hyphen Should hyphens be retained or replaced? Options are "space" (hyphens are replaced with a space), "keep" (the hyphens are retained), "remove" the hyphens are removed with no white space added.
 #' @param remove_apostrophe Should all apostraphes be removed? Default is FALSE.
 #' @param remove_punct Should all punctuation be removed (other than hyphens and apostrophes)? Default is FALSE.
+#' @param lowercase Should all text be lowercase? Default is FALSE.
 #' @param whisp the reticulated whisper model (e.g. produced via `whisper = reticulate::import("whisper"); model = whisper$load_model(model_type)`)
 #'
 #' @importFrom fs path_split
@@ -47,6 +48,7 @@ auto_textgrid <- function(
     hyphen = "keep",
     remove_apostrophe = FALSE,
     remove_punct = FALSE,
+    lowercase = FALSE,
     whisp = NULL
   ){
   # default prompt
@@ -71,7 +73,7 @@ auto_textgrid <- function(
 
   # Step 4
   cli::cli_progress_step("\nStep 4 of 5")
-  cleaned = clean_up(whispered[[1]], whispered[[2]], folder = folder, remove_partial = remove_partial, hyphen = hyphen, remove_apostrophe = remove_apostrophe, remove_punct = remove_punct)
+  cleaned = clean_up(whispered[[1]], whispered[[2]], folder = folder, remove_partial = remove_partial, hyphen = hyphen, remove_apostrophe = remove_apostrophe, remove_punct = remove_punct, lowercase = lowercase)
 
   # Step 5
   cli::cli_progress_step("Step 5 of 5")

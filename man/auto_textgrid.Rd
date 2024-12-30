@@ -19,6 +19,7 @@ auto_textgrid(
   hyphen = "keep",
   remove_apostrophe = FALSE,
   remove_punct = FALSE,
+  lowercase = FALSE,
   whisp = NULL
 )
 }
@@ -53,6 +54,8 @@ Default prompts the use of backchannels, repetitions, and other conversational p
 \item{remove_apostrophe}{Should all apostraphes be removed? Default is FALSE.}
 
 \item{remove_punct}{Should all punctuation be removed (other than hyphens and apostrophes)? Default is FALSE.}
+
+\item{lowercase}{Should all text be lowercase? Default is FALSE.}
 
 \item{whisp}{the reticulated whisper model (e.g. produced via \verb{whisper = reticulate::import("whisper"); model = whisper$load_model(model_type)})}
 }
