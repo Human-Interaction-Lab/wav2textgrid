@@ -20,6 +20,7 @@ auto_textgrid(
   remove_apostrophe = FALSE,
   remove_punct = FALSE,
   lowercase = FALSE,
+  nonspeech = "n",
   whisp = NULL
 )
 }
@@ -56,6 +57,8 @@ Default prompts the use of backchannels, repetitions, and other conversational p
 \item{remove_punct}{Should all punctuation be removed (other than hyphens and apostrophes)? Default is FALSE.}
 
 \item{lowercase}{Should all text be lowercase? Default is FALSE.}
+
+\item{nonspeech}{What symbol should be used for non-speech? Default = "n" but can be any string.}
 
 \item{whisp}{the reticulated whisper model (e.g. produced via \verb{whisper = reticulate::import("whisper"); model = whisper$load_model(model_type)})}
 }

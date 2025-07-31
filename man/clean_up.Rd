@@ -12,7 +12,8 @@ clean_up(
   hyphen,
   remove_apostrophe,
   remove_punct,
-  lowercase
+  lowercase,
+  nonspeech
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ clean_up(
 \item{remove_punct}{Should all punctuation be removed (other than hyphens and apostrophes)? Default is FALSE.}
 
 \item{lowercase}{Should all text be lowercase? Default is FALSE.}
+
+\item{nonspeech}{What symbol should be used for non-speech? Default = "n" but can be any string.}
 }
 \description{
 Cleans up the data to get it ready for making

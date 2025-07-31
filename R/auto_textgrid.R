@@ -21,6 +21,7 @@
 #' @param remove_apostrophe Should all apostraphes be removed? Default is FALSE.
 #' @param remove_punct Should all punctuation be removed (other than hyphens and apostrophes)? Default is FALSE.
 #' @param lowercase Should all text be lowercase? Default is FALSE.
+#' @param nonspeech What symbol should be used for non-speech? Default = "n" but can be any string.
 #' @param whisp the reticulated whisper model (e.g. produced via `whisper = reticulate::import("whisper"); model = whisper$load_model(model_type)`)
 #'
 #' @importFrom fs path_split
@@ -49,6 +50,7 @@ auto_textgrid <- function(
     remove_apostrophe = FALSE,
     remove_punct = FALSE,
     lowercase = FALSE,
+    nonspeech = "n",
     whisp = NULL
   ){
   # default prompt
@@ -73,7 +75,7 @@ auto_textgrid <- function(
 
   # Step 4
   cli::cli_progress_step("\nStep 4 of 5")
-  cleaned = clean_up(whispered[[1]], whispered[[2]], folder = folder, remove_partial = remove_partial, hyphen = hyphen, remove_apostrophe = remove_apostrophe, remove_punct = remove_punct, lowercase = lowercase)
+  cleaned = clean_up(whispered[[1]], whispered[[2]], folder = folder, remove_partial = remove_partial, hyphen = hyphen, remove_apostrophe = remove_apostrophe, remove_punct = remove_punct, lowercase = lowercase, nonspeech = nonspeech)
 
   # Step 5
   cli::cli_progress_step("Step 5 of 5")

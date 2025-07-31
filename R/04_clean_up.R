@@ -11,6 +11,7 @@
 #' @param remove_apostrophe Should all apostraphes be removed? Default is FALSE.
 #' @param remove_punct Should all punctuation be removed (other than hyphens and apostrophes)? Default is FALSE.
 #' @param lowercase Should all text be lowercase? Default is FALSE.
+#' @param nonspeech What symbol should be used for non-speech? Default = "n" but can be any string.
 #'
 #' @importFrom reticulate import
 #' @importFrom purrr map
@@ -29,7 +30,7 @@
 #' @importFrom english english
 #'
 #' @export
-clean_up <- function(whispered1, whispered2, folder, remove_partial, hyphen, remove_apostrophe, remove_punct, lowercase){
+clean_up <- function(whispered1, whispered2, folder, remove_partial, hyphen, remove_apostrophe, remove_punct, lowercase, nonspeech){
   # grab segments
   # grab segments
   chan1 = purrr::map(whispered1, ~.x[["segments"]])
@@ -77,8 +78,8 @@ clean_up <- function(whispered1, whispered2, folder, remove_partial, hyphen, rem
   non2$start1 = non2$end
   non2$end1 = dplyr::lead(non2$start)
   non2 = dplyr::select(non2, start = start1, end = end1)
-  non1$text = "n"
-  non2$text = "n"
+  non1$text = nonspeech
+  non2$text = nonspeech
   non1$channel = 1
   non2$channel = 2
   non1 = unique(non1)

@@ -1,6 +1,6 @@
 Package: wav2textgrid
 Title: Create TextGrids from Wav Files
-Version: 0.0.3
+Version: 0.0.4
 Authors@R: 
     person("Tyson", "Barrett", , "t.barrett88@gmail.com", role = c("aut", "cre"))
 Description: Allows the direct usage of open source tools including OpenAI's Whisper
