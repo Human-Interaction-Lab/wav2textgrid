@@ -8,7 +8,7 @@
 #' @param plot should the tuneR::plot() be made for each channel? Default is FALSE.
 #'
 #' @import tuneR
-#' @importFrom stringr str_replace
+#' @importFrom stringr str_replace regex
 #'
 #' @export
 split_channels <- function(wav_file, noise_reduction = FALSE, threshold = 200, plot = FALSE){
@@ -19,8 +19,8 @@ split_channels <- function(wav_file, noise_reduction = FALSE, threshold = 200, p
   if (tuneR::nchannel(wav) != 2) stop ("wave file needs to have 2 channels")
 
   # file names
-  ch1 <- stringr::str_replace(wav_file, "\\.wav$", "_ch1.wav")
-  ch2 <- stringr::str_replace(wav_file, "\\.wav$", "_ch2.wav")
+  ch1 <- stringr::str_replace(wav_file, stringr::regex("\\.wav$", ignore_case = TRUE), "_ch1.wav")
+  ch2 <- stringr::str_replace(wav_file, stringr::regex("\\.wav$", ignore_case = TRUE), "_ch2.wav")
 
   # split into left and right
   left <- tuneR::channel(wav, which = "left")

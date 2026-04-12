@@ -81,7 +81,7 @@ auto_textgrid <- function(
   cli::cli_progress_step("Step 5 of 5")
   textgrid = make_textgrid(cleaned, wav_file)
   cli::cli_progress_done()
-  cli::cli_alert_info(paste0("Written to ", paste0(str_remove(wav_file, "\\.wav"), "_output.TextGrid\n")))
+  cli::cli_alert_info(paste0("Written to ", paste0(str_remove(wav_file, stringr::regex("\\.wav$", ignore_case = TRUE)), "_output.TextGrid\n")))
 
   # clean up
   on.exit(cli::cli_progress_done())
