@@ -69,7 +69,7 @@ above gives us the following TextGrid (as shown by reading it in using
 
     #> # A tibble: 254 × 6
     #>    tier_num tier_xmin tier_xmax  xmin  xmax text                                
-    #>       <dbl>     <dbl>     <dbl> <dbl> <dbl> <chr>                               
+    #>       <int>     <dbl>     <dbl> <dbl> <dbl> <chr>                               
     #>  1        1         0      281.  0     1.49 n                                   
     #>  2        1         0      281.  1.49  4.43 i am participant one on channel one 
     #>  3        1         0      281.  4.43  8.31 n                                   
