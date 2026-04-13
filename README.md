@@ -7,13 +7,11 @@
 
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
-[![CRAN
-status](https://www.r-pkg.org/badges/version/wav2textgrid)](https://CRAN.R-project.org/package=wav2textgrid)
-[![R-CMD-check](https://github.com/TysonStanley/wav2textgrid/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/TysonStanley/wav2textgrid/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check](https://github.com/Human-Interaction-Lab/wav2textgrid/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Human-Interaction-Lab/wav2textgrid/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-The goal of wav2textgrid is to take a two channel `wav` file of a
-conversation and turn it into a transcribed textgrid ready for further
+The goal of `wav2textgrid` is to take a two channel `.wav` file of a
+conversation and turn it into a transcribed TextGrid ready for further
 analysis in R or Praat. To use the package, you’ll need `R`, `Praat`,
 and `python` installed.
 
@@ -23,8 +21,8 @@ You can install the development version of wav2textgrid from
 [GitHub](https://github.com/) with:
 
 ``` r
-# install.packages("devtools")
-devtools::install_github("TysonStanley/wav2textgrid")
+# install.packages("remotes")
+remotes::install_github("Human-Interaction-Lab/wav2textgrid")
 ```
 
 ## Example
