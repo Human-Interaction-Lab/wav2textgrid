@@ -5,7 +5,7 @@
 #' @param data cleaned data from clean_up().
 #' @param wav_file The wave file
 #'
-#' @importFrom stringr str_remove
+#' @importFrom stringr str_remove regex
 #'
 #' @export
 make_textgrid <- function(data, wav_file){
@@ -53,6 +53,6 @@ make_textgrid <- function(data, wav_file){
   textgrid <- paste0(textgrid_header, do.call("paste0", chan_texgrid))
 
   # Save the TextGrid to a file
-  writeLines(textgrid, paste0(str_remove(wav_file, "\\.wav"), "_output.TextGrid"))
+  writeLines(textgrid, paste0(str_remove(wav_file, stringr::regex("\\.wav$", ignore_case = TRUE)), "_output.TextGrid"))
   invisible(textgrid)
 }
