@@ -21,6 +21,10 @@
 #'
 #' @export
 whispering <- function(ch1, ch2, folder, model_type, prompt, whisp = NULL){
+  # declare python requirements before any reticulate call (np_array below)
+  # initializes python, which locks in the environment
+  ensure_whisper()
+
   # grab silence/sounding timings
   chan1_silences = readtextgrid::read_textgrid(fs::dir_ls(folder, regexp = "ch1.wav_silences"))
   chan2_silences = readtextgrid::read_textgrid(fs::dir_ls(folder, regexp = "ch2.wav_silences"))
@@ -59,7 +63,6 @@ whispering <- function(ch1, ch2, folder, model_type, prompt, whisp = NULL){
 
   # set up model if not provided
   if (is.null(whisp)){
-    ensure_whisper()
     whisper = reticulate::import("whisper")
     model = whisper$load_model(model_type)
   } else {

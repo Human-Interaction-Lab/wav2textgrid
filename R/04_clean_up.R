@@ -26,7 +26,6 @@
 #' @importFrom stringr str_remove_all
 #' @importFrom stringr str_replace_all
 #' @importFrom stringr str_squish
-#' @importFrom furniture washer
 #' @importFrom english english
 #'
 #' @export
@@ -129,7 +128,7 @@ clean_up <- function(whispered1, whispered2, folder, remove_partial, hyphen, rem
 
   # clean up
   final$text = stringr::str_squish(final$text)
-  final$end = furniture::washer(final$end, is.na, value = max(final$end, na.rm=TRUE))
+  final$end[is.na(final$end)] = max(final$end, na.rm = TRUE)
   final = unique(final)
   return(final)
 }

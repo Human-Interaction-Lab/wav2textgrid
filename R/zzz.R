@@ -6,6 +6,10 @@
     utils::globalVariables(c("osVersion", "tier_xmax", "end", "xmin", "folder", "xmax", "annotation_num", ".", "1", "2", "channel", "dist", "dom", "end.x", "i.end", "i.id", "i.text", "id", "min_dist", "start", "start.x", "text", "start1", "end1"))
   }
 
+  # declare python requirements early so reticulate includes them whenever
+  # python is first initialized (a user-bound environment still takes precedence)
+  tryCatch(ensure_whisper(), error = function(e) invisible(NULL))
+
   # find praat
   sys = Sys.info()[['sysname']]
   if (sys == "Darwin") path = "/Applications/Praat.app/Contents/MacOS/Praat"
