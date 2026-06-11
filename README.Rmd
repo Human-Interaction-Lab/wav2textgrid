@@ -13,6 +13,7 @@ knitr::opts_chunk$set(
 )
 ```
 
+
 # wav2textgrid
 
 <!-- badges: start -->
@@ -20,7 +21,7 @@ knitr::opts_chunk$set(
 [![R-CMD-check](https://github.com/Human-Interaction-Lab/wav2textgrid/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Human-Interaction-Lab/wav2textgrid/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-The goal of `wav2textgrid` is to take a two channel `.wav` file of a conversation and turn it into a transcribed TextGrid ready for further analysis in R or Praat. To use the package, you'll need `R`, `Praat`, and `python` installed.
+The goal of `wav2textgrid` is to take a two channel `.wav` file of a conversation and turn it into a transcribed TextGrid ready for further analysis in R or Praat. To use the package, you'll need `R` and `Praat` installed (a python environment is provisioned automatically the first time you run the package).
 
 ## Installation
 
@@ -35,19 +36,22 @@ remotes::install_github("Human-Interaction-Lab/wav2textgrid")
 
 ### Python Environment Set Up
 
+No manual setup is needed. The package relies on python (for the OpenAI Whisper model); the first time you run it, the package calls
+
+```{r pyrequire, eval=FALSE}
+reticulate::py_require("openai-whisper", python_version = "3.11")
+```
+
+which makes `reticulate` automatically download and cache a python environment with `openai-whisper` installed.
+
+If you prefer to manage a persistent conda environment yourself, you can still create one with:
+
 ```{r example, eval=FALSE}
 library(wav2textgrid)
-py_setup(path)
-# this runs the following
-# wav2textgrid relies on the python (the OpenAI whisper model)
-# reticulate::use_miniconda("path/r-miniconda-arm64")
-# if the following python packages are not installed, use:
-# packages = c("ffmpeg-python", "numpy", "scipy", "setuptools-rust", "pydub", "llvmlite", "librosa", "numba",
-#              "Cmake", "wheel", "setuptools-rust", "pytorch", "torchvision")
-# reticulate::conda_install(envname = "~/Desktop/Automation/r-py-automate", packages = packages)
-# reticulate::py_install("openai-whisper", pip = TRUE, pip_options = "-U")
-# reticulate::py_install("light-the-torch", pip = TRUE, pip_options = "-U")
+py_setup("wav2textgrid-env")
 ```
+
+or point `reticulate` at any environment that has `openai-whisper` installed (e.g., `reticulate::use_condaenv()` or `reticulate::use_virtualenv()`) before running `auto_textgrid()`.
 
 ### Run `auto_textgrid()`
 
@@ -57,16 +61,9 @@ auto_textgrid(wav_file)
 ```
 
 ```{r example2, echo=FALSE, eval=FALSE}
-# wav2textgrid relies on the python (the OpenAI whisper model)
-reticulate::use_miniconda("/Users/tysonbarrett/Library/r-miniconda-arm64")
-# if the following python packages are not installed, use:
-# packages = c("ffmpeg-python", "numpy", "scipy", "setuptools-rust", "pydub", "llvmlite", "librosa", "numba",
-#              "Cmake", "wheel", "setuptools-rust", "pytorch", "torchvision")
-# reticulate::conda_install(envname = "~/Desktop/Automation/r-py-automate", packages = packages)
-# reticulate::py_install("openai-whisper", pip = TRUE, pip_options = "-U")
-# reticulate::py_install("light-the-torch", pip = TRUE, pip_options = "-U")
+reticulate::py_require("openai-whisper", python_version = "3.11")
 
-devtools::load_all(here::here())
+library(wav2textgrid)
 wav_file = here::here("inst", "extdata", "example.wav")
 auto_textgrid(wav_file)
 ```
@@ -76,7 +73,7 @@ auto_textgrid(wav_file)
 #> 'I was like, was like, I'm like, um, ah, huh, and so, so um, uh, and um, mm-hmm, like um, so like, like it's, it's like, i mean, yeah, uh-huh, hmm, right, ok so, uh so, so uh, yeah so, you know, it's uh, uh and, and uh'
 #> ✔ Step 1 of 5 [2.6s]
 #> ✔ Step 2 of 5 [1.8s]
-#> ✔ Step 3 of 5 [5m 11.3s]                                                
+#> ✔ Step 3 of 5 [5m 11.3s]
 #> ✔ Step 4 of 5 [262ms]
 #> ✔ Step 5 of 5 [68ms]
 #> ℹ Written to path/example_output.TextGrid
