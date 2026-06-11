@@ -1,3 +1,9 @@
+# 0.0.5
+
+* Whisper transcription now receives the audio samples directly (resampled to 16 kHz in R and passed as a numpy array) instead of segment wav file paths. This avoids Whisper using ffmpeg (crashed in some cases with an access violation).
+* Fixed the end-of-segment padding so segments now extend 0.2 s past the detected boundary (capped at the audio duration), matching the existing start padding.
+* `auto_textgrid()` now forwards the `whisp` argument to `whispering()`, and `whispering()` correctly uses a supplied `whisp` model instead of erroring.
+
 # 0.0.4
 
 * Added parameter to change non-speech, default is "n".

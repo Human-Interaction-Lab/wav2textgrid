@@ -13,6 +13,7 @@
 #' @importFrom glue glue
 #' @import tuneR
 #' @importFrom seewave cutw
+#' @importFrom seewave resamp
 #' @importFrom fs path
 #' @import reticulate
 #' @importFrom cli cli_progress_bar
@@ -35,48 +36,62 @@ whispering <- function(ch1, ch2, folder, model_type, prompt, whisp = NULL){
   sample_freq2 = ch2_audio@samp.rate
 
   # create segmented audio
-  ch1_files = vector("list", length = nrow(timings1))
+  duration1 = length(ch1_audio@left)/sample_freq1
+  duration2 = length(ch2_audio@left)/sample_freq2
+  ch1_segments = vector("list", length = nrow(timings1))
   for (i in 1:nrow(timings1)){
     rows = timings1[i,]
-    start = if (rows$start-0.2 < 0) 0 else rows$start-0.2
-    end = if (rows$end+0.2 > max(rows$end)) rows$end else rows$end+0.2
+    start = max(rows$start - 0.2, 0)
+    end = min(rows$end + 0.2, duration1)
     audio_seg1 = seewave::cutw(ch1_audio, f = sample_freq1, from = start, to = end, output = "Wave")
     tuneR::writeWave(audio_seg1, filename = fs::path(folder, paste0("ch1_segment_", i, ".wav")))
-    ch1_files[[i]] = fs::path(folder, paste0("ch1_segment_", i, ".wav"))
+    ch1_segments[[i]] = wave_to_whisper(audio_seg1, sample_freq1)
   }
-  ch2_files = vector("list", length = nrow(timings2))
+  ch2_segments = vector("list", length = nrow(timings2))
   for (i in 1:nrow(timings2)){
     rows = timings2[i,]
-    start = if (rows$start-0.2 < 0) 0 else rows$start-0.2
-    end = if (rows$end+0.2 > max(rows$end)) rows$end else rows$end+0.2
+    start = max(rows$start - 0.2, 0)
+    end = min(rows$end + 0.2, duration2)
     audio_seg2 = seewave::cutw(ch2_audio, f = sample_freq2, from = start, to = end, output = "Wave")
     tuneR::writeWave(audio_seg2, filename = fs::path(folder, paste0("ch2_segment_", i, ".wav")))
-    ch2_files[[i]] = fs::path(folder, paste0("ch2_segment_", i, ".wav"))
+    ch2_segments[[i]] = wave_to_whisper(audio_seg2, sample_freq2)
   }
 
   # set up model if not provided
   if (is.null(whisp)){
     whisper = reticulate::import("whisper")
     model = whisper$load_model(model_type)
+  } else {
+    model = whisp
   }
 
   # channel 1
-  result1 = vector("list", length = length(ch1_files))
-  message1 = paste0("Transcribing Channel 1 | n = ", length(ch1_files), " |")
-  cli::cli_progress_bar(message1, total = length(ch1_files))
-  for (i in seq_along(ch1_files)){
-    result1[[i]] = model$transcribe(ch1_files[[i]], fp16 = FALSE, initial_prompt = prompt)
+  result1 = vector("list", length = length(ch1_segments))
+  message1 = paste0("Transcribing Channel 1 | n = ", length(ch1_segments), " |")
+  cli::cli_progress_bar(message1, total = length(ch1_segments))
+  for (i in seq_along(ch1_segments)){
+    result1[[i]] = model$transcribe(ch1_segments[[i]], fp16 = FALSE, initial_prompt = prompt)
     cli::cli_progress_update(set = i)
   }
 
   # channel 2
-  result2 = vector("list", length = length(ch2_files))
-  message2 = paste0("Transcribing Channel 2 | n = ", length(ch2_files), " |")
-  cli::cli_progress_bar(message2, total = length(ch2_files))
-  for (i in seq_along(ch2_files)){
-    result2[[i]] = model$transcribe(ch2_files[[i]], fp16 = FALSE, initial_prompt = prompt)
+  result2 = vector("list", length = length(ch2_segments))
+  message2 = paste0("Transcribing Channel 2 | n = ", length(ch2_segments), " |")
+  cli::cli_progress_bar(message2, total = length(ch2_segments))
+  for (i in seq_along(ch2_segments)){
+    result2[[i]] = model$transcribe(ch2_segments[[i]], fp16 = FALSE, initial_prompt = prompt)
     cli::cli_progress_update(set = i)
   }
 
   return(list(result1, result2))
+}
+
+
+# convert a Wave segment to what whisper expects (mono float32 in [-1, 1] at 16 kHz)
+# passed to transcribe() as a numpy array so whisper never shells out to ffmpeg
+wave_to_whisper <- function(wave, sample_freq){
+  if (sample_freq != 16000)
+    wave = seewave::resamp(wave, f = sample_freq, g = 16000, output = "Wave")
+  samples = as.numeric(wave@left) / (2^(wave@bit - 1))
+  reticulate::np_array(samples, dtype = "float32")
 }
