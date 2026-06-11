@@ -59,6 +59,7 @@ whispering <- function(ch1, ch2, folder, model_type, prompt, whisp = NULL){
 
   # set up model if not provided
   if (is.null(whisp)){
+    ensure_whisper()
     whisper = reticulate::import("whisper")
     model = whisper$load_model(model_type)
   } else {
