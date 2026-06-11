@@ -9,12 +9,11 @@ Description: Allows the direct usage of open source tools including OpenAI's Whi
     in the wav file. It is built on a set of Python scripts run in R using
     the `reticulate` package. As such, code can pulled and run directly in Python
     as well.
-Imports: 
-    reticulate,
+Imports:
+    reticulate (>= 1.41.0),
     dplyr,
     tidyr,
-    furniture,
-    readtextgrid, 
+    readtextgrid,
     seewave,
     speakr,
     tuneR,

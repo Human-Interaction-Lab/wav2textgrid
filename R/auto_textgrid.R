@@ -71,7 +71,7 @@ auto_textgrid <- function(
 
   # Step 3
   cli::cli_progress_step("Step 3 of 5")
-  whispered = whispering(step1[1], step1[2], folder = folder, model_type = model_type, prompt = prompt)
+  whispered = whispering(step1[1], step1[2], folder = folder, model_type = model_type, prompt = prompt, whisp = whisp)
 
   # Step 4
   cli::cli_progress_step("\nStep 4 of 5")

@@ -7,10 +7,17 @@
 py_setup(path, install = TRUE)
 }
 \arguments{
-\item{path}{The path to the miniconda environment}
+\item{path}{The name of (or path to) the conda environment}
 
-\item{install}{Whether to install conda at the specified path (default = TRUE)}
+\item{install}{Whether to create the conda environment if it does not already exist (default = TRUE)}
 }
 \description{
-The function sets up a miniconda environment at \code{path_to_env}
+Optional helper that creates a persistent conda environment
+containing the python dependencies (the OpenAI Whisper model).
+
+Manual setup is no longer required: if no python environment has been set up,
+the package automatically provisions one the first time the Whisper model is
+used by calling \code{reticulate::py_require("openai-whisper", python_version = "3.11")}.
+Use \code{py_setup()} only if you prefer a persistent, named conda environment,
+e.g. on machines where the automatic provisioning is not possible.
 }
