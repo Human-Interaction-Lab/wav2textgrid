@@ -6,6 +6,7 @@
 \usage{
 auto_textgrid(
   wav_file,
+  channels = "auto",
   noise_reduction = FALSE,
   min_pitch = 100,
   time_step = 0,
@@ -26,6 +27,11 @@ auto_textgrid(
 }
 \arguments{
 \item{wav_file}{The path to the wav file}
+
+\item{channels}{how to treat the wav file's channels. "auto" (default) detects
+the number of channels in the file (mono = one speaker tier, stereo = two
+speaker tiers), "mono" mixes a stereo file down to a single tier, and
+"stereo" requires a two channel file.}
 
 \item{noise_reduction}{whether the praat noise reduction script should be run before getting boundaries, default = FALSE}
 

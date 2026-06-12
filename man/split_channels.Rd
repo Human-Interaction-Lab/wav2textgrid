@@ -8,7 +8,8 @@ split_channels(
   wav_file,
   noise_reduction = FALSE,
   threshold = 200,
-  plot = FALSE
+  plot = FALSE,
+  channels = "auto"
 )
 }
 \arguments{
@@ -19,7 +20,18 @@ split_channels(
 \item{threshold}{noise level for removal}
 
 \item{plot}{should the tuneR::plot() be made for each channel? Default is FALSE.}
+
+\item{channels}{how to treat the wav file's channels. "auto" (default) uses
+the number of channels in the file (mono = one tier, stereo = two tiers),
+"mono" mixes a stereo file down to a single tier, and "stereo" requires a
+two channel file.}
+}
+\value{
+A character vector of the channel file paths (length 1 for mono,
+length 2 for stereo).
 }
 \description{
-Splits the wav file into the two channels
+Splits the wav file into its channels (one wav file per
+speaker tier). Mono wav files produce a single channel file; stereo wav
+files produce two.
 }

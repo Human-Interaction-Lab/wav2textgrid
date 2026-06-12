@@ -1,14 +1,15 @@
 Package: wav2textgrid
 Title: Create TextGrids from Wav Files
-Version: 0.0.5
-Authors@R: 
+Version: 0.0.6
+Authors@R:
     person("Tyson", "Barrett", , "t.barrett88@gmail.com", role = c("aut", "cre"))
 Description: Allows the direct usage of open source tools including OpenAI's Whisper
-    model, to create a transcribed textgrid for Wav files. It is currently
-    designed to work with conversations with two individuals with two channels
-    in the wav file. It is built on a set of Python scripts run in R using
-    the `reticulate` package. As such, code can pulled and run directly in Python
-    as well.
+    model, to create a transcribed textgrid for Wav files. It is designed to work
+    with conversations with two individuals with two channels in the wav file
+    (one tier per channel) as well as single channel (mono) wav files, which
+    produce a single tier TextGrid. It is built on a set of Python scripts run
+    in R using the `reticulate` package. As such, code can pulled and run
+    directly in Python as well.
 Imports:
     reticulate (>= 1.41.0),
     dplyr,
@@ -29,6 +30,7 @@ License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
-Suggests: 
-    testthat (>= 3.0.0)
+Suggests:
+    testthat (>= 3.0.0),
+    withr
 Config/testthat/edition: 3
