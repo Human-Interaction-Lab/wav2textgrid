@@ -10,9 +10,12 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 [![R-CMD-check](https://github.com/Human-Interaction-Lab/wav2textgrid/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Human-Interaction-Lab/wav2textgrid/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-The goal of `wav2textgrid` is to take a two channel `.wav` file of a
-conversation and turn it into a transcribed TextGrid ready for further
-analysis in R or Praat. To use the package, you’ll need `R` and `Praat`
+The goal of `wav2textgrid` is to take a `.wav` file of a conversation
+and turn it into a transcribed TextGrid ready for further analysis in R
+or Praat. Two channel (stereo) files produce a TextGrid with one tier
+per channel; single channel (mono) files produce a single tier TextGrid
+(detected automatically, or set `channels = "mono"` to mix a stereo file
+down to one tier). To use the package, you’ll need `R` and `Praat`
 installed (a python environment is provisioned automatically the first
 time you run the package).
 
