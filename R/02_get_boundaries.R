@@ -60,9 +60,9 @@ endform"})
   # run praat on the created script
   run_praat(args = paste0('--run "', script_file, '" ', '"', folder, '" "" 1'))
 
-  # check output
+  # check output (only meaningful when there are two channels to compare)
   textgrid_to_check = fs::dir_ls(folder, regexp = "TextGrid$")
-  check_shared_boundaries(textgrid_to_check)
+  if (length(textgrid_to_check) >= 2) check_shared_boundaries(textgrid_to_check)
 
   # if successful return 1
   return(1)

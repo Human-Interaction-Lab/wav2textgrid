@@ -6,7 +6,7 @@
 \usage{
 clean_up(
   whispered1,
-  whispered2,
+  whispered2 = NULL,
   folder,
   remove_partial,
   hyphen,
@@ -19,7 +19,7 @@ clean_up(
 \arguments{
 \item{whispered1}{channel one whisper data output}
 
-\item{whispered2}{channel two whisper data output}
+\item{whispered2}{channel two whisper data output (NULL for single channel wav files)}
 
 \item{folder}{the folder where the files are located}
 

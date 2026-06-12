@@ -6,6 +6,7 @@
 #' @param wav_file The wave file
 #'
 #' @importFrom stringr str_remove regex
+#' @importFrom english english
 #'
 #' @export
 make_textgrid <- function(data, wav_file){
@@ -14,13 +15,13 @@ make_textgrid <- function(data, wav_file){
     'Object class = "TextGrid"\n\nxmin = 0\n',
     'xmax = ', max(data$end, na.rm=TRUE), '\n',
     'tiers? <exists>\n',
-    'size = 2\nitem []:\n'
+    'size = ', length(unique(data$channel)), '\nitem []:\n'
   )
 
   chan_texgrid = list()
   for (chan in unique(data$channel)){
     d_chan = data[data$channel == chan, ]
-    chan_name <- if (chan == 1) "one" else "two"
+    chan_name <- as.character(english::english(chan))
 
     textgrid_channel_start = paste0(
       sprintf('    item [%d]:\n', chan),

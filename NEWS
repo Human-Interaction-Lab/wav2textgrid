@@ -1,3 +1,10 @@
+# 0.0.6
+
+* Added single channel (mono) support. `auto_textgrid()` gains a `channels` argument ("auto" by default): mono wav files are detected automatically and produce a single tier TextGrid, `channels = "mono"` mixes a stereo file down to one tier, and `channels = "stereo"` keeps the previous behavior of requiring a two channel file. `split_channels()` gains the same argument, and `whispering()`/`clean_up()` now accept `ch2 = NULL`/`whispered2 = NULL` for the single channel case.
+* The TextGrid header now reports the actual number of tiers (previously hardcoded to 2) and tier names generalize from the channel number ("one", "two").
+* Non-speech padding before the first sounding interval now uses the `nonspeech` symbol instead of a hardcoded "n".
+* Refactored the per-channel transcription and clean up logic into shared helpers (no behavior change for stereo files).
+
 # 0.0.5
 
 * Whisper transcription now receives the audio samples directly (resampled to 16 kHz in R and passed as a numpy array) instead of segment wav file paths. This avoids Whisper using ffmpeg (crashed in some cases with an access violation).

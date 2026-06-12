@@ -4,12 +4,12 @@
 \alias{whispering}
 \title{Whisper Transcription}
 \usage{
-whispering(ch1, ch2, folder, model_type, prompt, whisp = NULL)
+whispering(ch1, ch2 = NULL, folder, model_type, prompt, whisp = NULL)
 }
 \arguments{
 \item{ch1}{channel 1 file}
 
-\item{ch2}{channel 2 file}
+\item{ch2}{channel 2 file (NULL for single channel wav files)}
 
 \item{folder}{folder of the files}
 

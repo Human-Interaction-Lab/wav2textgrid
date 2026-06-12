@@ -1,36 +1,59 @@
 #' @title Split Channels
 #'
-#' @description Splits the wav file into the two channels
+#' @description Splits the wav file into its channels (one wav file per
+#' speaker tier). Mono wav files produce a single channel file; stereo wav
+#' files produce two.
 #'
 #' @param wav_file The path to the wav file
 #' @param noise_reduction whether the praat noise reduction script should be run before getting boundaries, default = FALSE
 #' @param threshold noise level for removal
 #' @param plot should the tuneR::plot() be made for each channel? Default is FALSE.
+#' @param channels how to treat the wav file's channels. "auto" (default) uses
+#' the number of channels in the file (mono = one tier, stereo = two tiers),
+#' "mono" mixes a stereo file down to a single tier, and "stereo" requires a
+#' two channel file.
+#'
+#' @return A character vector of the channel file paths (length 1 for mono,
+#' length 2 for stereo).
 #'
 #' @import tuneR
 #' @importFrom stringr str_replace regex
 #'
 #' @export
-split_channels <- function(wav_file, noise_reduction = FALSE, threshold = 200, plot = FALSE){
+split_channels <- function(wav_file, noise_reduction = FALSE, threshold = 200, plot = FALSE, channels = "auto"){
+  channels <- match.arg(channels, c("auto", "mono", "stereo"))
+
   # read in wave file
   wav <- tuneR::readWave(wav_file)
   wav <- tuneR::normalize(wav, unit = "16")
-  # check if it has two channels
-  if (tuneR::nchannel(wav) != 2) stop ("wave file needs to have 2 channels")
+  n_chan <- tuneR::nchannel(wav)
+  if (! n_chan %in% c(1, 2)) stop("wave file needs to have 1 or 2 channels")
+
+  if (channels == "auto") channels <- if (n_chan == 1) "mono" else "stereo"
+  if (channels == "stereo" && n_chan != 2) stop("wave file needs to have 2 channels (use channels = 'mono' or 'auto' for single channel files)")
+
+  # one Wave object per output tier
+  if (channels == "mono"){
+    if (n_chan == 2){
+      # mixing down averages the channels, which yields non-integer samples
+      wav <- tuneR::mono(wav, which = "both")
+      wav@left <- round(wav@left)
+    }
+    waves <- list(wav)
+  } else {
+    waves <- list(tuneR::channel(wav, which = "left"), tuneR::channel(wav, which = "right"))
+  }
 
   # file names
-  ch1 <- stringr::str_replace(wav_file, stringr::regex("\\.wav$", ignore_case = TRUE), "_ch1.wav")
-  ch2 <- stringr::str_replace(wav_file, stringr::regex("\\.wav$", ignore_case = TRUE), "_ch2.wav")
-
-  # split into left and right
-  left <- tuneR::channel(wav, which = "left")
-  right <- tuneR::channel(wav, which = "right")
+  chs <- vapply(seq_along(waves), function(i){
+    stringr::str_replace(wav_file, stringr::regex("\\.wav$", ignore_case = TRUE), paste0("_ch", i, ".wav"))
+  }, character(1))
 
   # save channeled wav files
-  tuneR::writeWave(left, ch1)
-  tuneR::writeWave(right, ch2)
-
-  if (plot) tuneR::plot(left); if (plot) tuneR::plot(right)
+  for (i in seq_along(waves)){
+    tuneR::writeWave(waves[[i]], chs[i])
+    if (plot) tuneR::plot(waves[[i]])
+  }
 
   # delete tmp folder if already exists
   if (fs::dir_exists(file.path(fs::path_dir(wav_file), "tmp")))
@@ -38,26 +61,22 @@ split_channels <- function(wav_file, noise_reduction = FALSE, threshold = 200, p
 
   # move files to tmp folder
   fs::dir_create(file.path(fs::path_dir(wav_file), "tmp"))
-  file1 = fs::path_file(ch1)
-  file2 = fs::path_file(ch2)
-  fs::file_move(ch1, file.path(fs::path_dir(ch1), "tmp"))
-  fs::file_move(ch2, file.path(fs::path_dir(ch2), "tmp"))
-
-  # new locations
-  ch1 = file.path(fs::path_dir(ch1), "tmp", file1)
-  ch2 = file.path(fs::path_dir(ch2), "tmp", file2)
+  for (i in seq_along(chs)){
+    file_name = fs::path_file(chs[i])
+    fs::file_move(chs[i], file.path(fs::path_dir(chs[i]), "tmp"))
+    chs[i] = file.path(fs::path_dir(chs[i]), "tmp", file_name)
+  }
 
   # noise reduction
   if (noise_reduction){
-    noise_reduce(fs::path_dir(ch1), ch1)
-    noise_reduce(fs::path_dir(ch2), ch2)
+    for (ch in chs) noise_reduce(fs::path_dir(ch), ch)
   }
 
   # check that files exist
-  if (! fs::file_exists(ch1) | ! fs::file_exists(ch2)) stop("error creating channels")
+  if (! all(fs::file_exists(chs))) stop("error creating channels")
 
   # return names
-  return(c(ch1, ch2))
+  return(chs)
 }
 
 
