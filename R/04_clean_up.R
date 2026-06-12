@@ -4,7 +4,7 @@
 #' the TextGrid file.
 #'
 #' @param whispered1 channel one whisper data output
-#' @param whispered2 channel two whisper data output
+#' @param whispered2 channel two whisper data output (NULL for single channel wav files)
 #' @param folder the folder where the files are located
 #' @param remove_partial Should the model keep words that are incomplete at the end of the sentence? Default is FALSE.
 #' @param hyphen Should hyphens be retained or replaced? Options are "space" (hyphens are replaced with a space), "keep" (the hyphens are retained), "remove" the hyphens are removed with no white space added.
@@ -29,78 +29,18 @@
 #' @importFrom english english
 #'
 #' @export
-clean_up <- function(whispered1, whispered2, folder, remove_partial, hyphen, remove_apostrophe, remove_punct, lowercase, nonspeech){
-  # grab segments
-  # grab segments
-  chan1 = purrr::map(whispered1, ~.x[["segments"]])
-  chan2 = purrr::map(whispered2, ~.x[["segments"]])
-  lengths1 = purrr::map_dbl(chan1, ~length(.x))
-  lengths2 = purrr::map_dbl(chan2, ~length(.x))
+clean_up <- function(whispered1, whispered2 = NULL, folder, remove_partial, hyphen, remove_apostrophe, remove_punct, lowercase, nonspeech){
+  whispered = list(whispered1, whispered2)
+  whispered = whispered[!vapply(whispered, is.null, logical(1))]
 
-  # extract text
-  chan1_text = text_single(lengths1, chan1)
-  chan2_text = text_single(lengths2, chan2)
-
-  chan1_text = tolower(chan1_text)
-  chan1_text = stringr::str_squish(stringr::str_remove_all(chan1_text, "\\.|\\,"))
-  chan1_text = data.frame(text = chan1_text)
-  chan2_text = tolower(chan2_text)
-  chan2_text = stringr::str_squish(stringr::str_remove_all(chan2_text, "\\.|\\,"))
-  chan2_text = data.frame(text = chan2_text)
-
-  # grab silences file
-  chan1_silences = readtextgrid::read_textgrid(fs::dir_ls(folder, regexp = "ch1.wav_silences"))
-  chan2_silences = readtextgrid::read_textgrid(fs::dir_ls(folder, regexp = "ch2.wav_silences"))
-  colnames(chan1_silences)[which(colnames(chan1_silences) == "xmin")] = "start"
-  colnames(chan1_silences)[which(colnames(chan1_silences) == "xmax")] = "end"
-  colnames(chan2_silences)[which(colnames(chan2_silences) == "xmin")] = "start"
-  colnames(chan2_silences)[which(colnames(chan2_silences) == "xmax")] = "end"
-  chan1_silences = chan1_silences[chan1_silences$text == "sounding", ]
-  chan2_silences = chan2_silences[chan2_silences$text == "sounding", ]
-  chan1_silences = chan1_silences[, -which(colnames(chan1_silences) == "text")]
-  chan2_silences = chan2_silences[, -which(colnames(chan2_silences) == "text")]
-
-  # join with text
-  chan1_joined = cbind(chan1_silences, chan1_text)
-  chan2_joined = cbind(chan2_silences, chan2_text)
-
-  # channels
-  chan1_joined$channel = 1
-  chan2_joined$channel = 2
-
-  # add "n" for non-speech
-  non1 = chan1_joined
-  non1$start1 = non1$end
-  non1$end1 = dplyr::lead(non1$start)
-  non1 = dplyr::select(non1, start = start1, end = end1)
-  non2 = chan2_joined
-  non2$start1 = non2$end
-  non2$end1 = dplyr::lead(non2$start)
-  non2 = dplyr::select(non2, start = start1, end = end1)
-  non1$text = nonspeech
-  non2$text = nonspeech
-  non1$channel = 1
-  non2$channel = 2
-  non1 = unique(non1)
-  non2 = unique(non2)
-
-  begin1 = dplyr::mutate(chan1_joined, end = min(start), start = 0, text = "n", channel = 1)
-  begin1 = dplyr::select(begin1, file, start, end, text, channel)
-  begin2 = dplyr::mutate(chan2_joined, end = min(start), start = 0, text = "n", channel = 2)
-  begin2 = dplyr::select(begin2, start, end, text, channel)
-  begin1 = unique(begin1)
-  begin2 = unique(begin2)
-
-  # combine
-  chan1_joined = dplyr::bind_rows(list(chan1_joined, non1, begin1))
-  chan2_joined = dplyr::bind_rows(list(chan2_joined, non2, begin2))
-  chan1_joined = dplyr::arrange(chan1_joined, start)
-  chan2_joined = dplyr::arrange(chan2_joined, start)
-  chan1_joined = tidyr::fill(chan1_joined, file:tier_xmax, .direction = "updown")
-  chan2_joined = tidyr::fill(chan2_joined, file:tier_xmax, .direction = "updown")
+  # per channel: join whisper text with silence timings and pad non-speech
+  joined = vector("list", length = length(whispered))
+  for (chan in seq_along(whispered)){
+    joined[[chan]] = clean_channel(whispered[[chan]], chan, folder, nonspeech)
+  }
 
   # bind
-  final = dplyr::bind_rows(list(chan1_joined, chan2_joined))
+  final = dplyr::bind_rows(joined)
   final$channel = as.numeric(final$channel)
   final$text = gsub("\\.|\\?", " ", final$text)
   final$text = gsub("\\,", "", final$text)
@@ -131,6 +71,51 @@ clean_up <- function(whispered1, whispered2, folder, remove_partial, hyphen, rem
   final$end[is.na(final$end)] = max(final$end, na.rm = TRUE)
   final = unique(final)
   return(final)
+}
+
+
+# join one channel's whisper text with its silence timings and pad non-speech
+clean_channel <- function(whispered, chan, folder, nonspeech){
+  # grab segments
+  segs = purrr::map(whispered, ~.x[["segments"]])
+  lengths = purrr::map_dbl(segs, ~length(.x))
+
+  # extract text
+  chan_text = text_single(lengths, segs)
+  chan_text = tolower(chan_text)
+  chan_text = stringr::str_squish(stringr::str_remove_all(chan_text, "\\.|\\,"))
+  chan_text = data.frame(text = chan_text)
+
+  # grab silences file
+  silences = readtextgrid::read_textgrid(fs::dir_ls(folder, regexp = paste0("ch", chan, ".wav_silences")))
+  colnames(silences)[which(colnames(silences) == "xmin")] = "start"
+  colnames(silences)[which(colnames(silences) == "xmax")] = "end"
+  silences = silences[silences$text == "sounding", ]
+  silences = silences[, -which(colnames(silences) == "text")]
+
+  # join with text
+  chan_joined = cbind(silences, chan_text)
+  chan_joined$channel = chan
+
+  # add non-speech between sounding intervals
+  non = chan_joined
+  non$start1 = non$end
+  non$end1 = dplyr::lead(non$start)
+  non = dplyr::select(non, start = start1, end = end1)
+  non$text = nonspeech
+  non$channel = chan
+  non = unique(non)
+
+  # add non-speech before the first sounding interval
+  begin = dplyr::mutate(chan_joined, end = min(start), start = 0, text = nonspeech, channel = chan)
+  begin = dplyr::select(begin, file, start, end, text, channel)
+  begin = unique(begin)
+
+  # combine
+  chan_joined = dplyr::bind_rows(list(chan_joined, non, begin))
+  chan_joined = dplyr::arrange(chan_joined, start)
+  chan_joined = tidyr::fill(chan_joined, file:tier_xmax, .direction = "updown")
+  return(chan_joined)
 }
 
 

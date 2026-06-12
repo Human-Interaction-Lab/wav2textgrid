@@ -4,6 +4,10 @@
 #' wav file.
 #'
 #' @param wav_file The path to the wav file
+#' @param channels how to treat the wav file's channels. "auto" (default) detects
+#' the number of channels in the file (mono = one speaker tier, stereo = two
+#' speaker tiers), "mono" mixes a stereo file down to a single tier, and
+#' "stereo" requires a two channel file.
 #' @param noise_reduction whether the praat noise reduction script should be run before getting boundaries, default = FALSE
 #' @param min_pitch Minimum pitch (Hz)
 #' @param time_step Time step (s)
@@ -36,6 +40,7 @@
 #' @export
 auto_textgrid <- function(
     wav_file,
+    channels = "auto",
     noise_reduction = FALSE,
     min_pitch = 100,
     time_step = 0.0,
@@ -61,8 +66,9 @@ auto_textgrid <- function(
 
   # Step 1
   cli::cli_progress_step("Step 1 of 5")
-  step1 = split_channels(wav_file, threshold = 200, plot = plot)
-  folder = fs::path_dir(step1[2])
+  step1 = split_channels(wav_file, threshold = 200, plot = plot, channels = channels)
+  if (length(step1) == 1) cli::cli_alert("Single channel: creating a one tier TextGrid")
+  folder = fs::path_dir(step1[1])
 
   # Step 2
   cli::cli_progress_step("Step 2 of 5")
@@ -71,11 +77,13 @@ auto_textgrid <- function(
 
   # Step 3
   cli::cli_progress_step("Step 3 of 5")
-  whispered = whispering(step1[1], step1[2], folder = folder, model_type = model_type, prompt = prompt, whisp = whisp)
+  ch2 = if (length(step1) > 1) step1[2] else NULL
+  whispered = whispering(step1[1], ch2, folder = folder, model_type = model_type, prompt = prompt, whisp = whisp)
 
   # Step 4
   cli::cli_progress_step("\nStep 4 of 5")
-  cleaned = clean_up(whispered[[1]], whispered[[2]], folder = folder, remove_partial = remove_partial, hyphen = hyphen, remove_apostrophe = remove_apostrophe, remove_punct = remove_punct, lowercase = lowercase, nonspeech = nonspeech)
+  whispered2 = if (length(whispered) > 1) whispered[[2]] else NULL
+  cleaned = clean_up(whispered[[1]], whispered2, folder = folder, remove_partial = remove_partial, hyphen = hyphen, remove_apostrophe = remove_apostrophe, remove_punct = remove_punct, lowercase = lowercase, nonspeech = nonspeech)
 
   # Step 5
   cli::cli_progress_step("Step 5 of 5")
