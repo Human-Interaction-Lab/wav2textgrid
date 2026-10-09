@@ -3,6 +3,11 @@
 * Channels where Praat detects no speech no longer crash the pipeline. `whispering()` skips them with a warning (suggesting a lower `threshold`) and `clean_up()` gives that tier a single non-speech interval spanning the file. Previously `1:nrow()` iterated over an empty table and errored in `seewave::cutw()`.
 * Sounding intervals where Whisper returns no words are now labelled with the `nonspeech` symbol instead of the literal text "na".
 * A missing silences TextGrid (e.g., Praat failed to run) now gives a clear error pointing at `get_boundaries()`, and the file lookup uses an anchored, escaped pattern.
+* Improved Praat calls: `get_boundaries()` now stops with a clear message if the Praat executable is missing (instead of a warning followed by an unrelated failure in the Whisper step), if Praat exits with an error (Praat's own message is shown), if Praat writes no silences TextGrid, or if Praat does not finish within `getOption("wav2textgrid.praat.timeout")` seconds (default 600).
+* Praat is now searched for in more places: the usual install locations for each OS (including `C:/Program Files/Praat/Praat.exe` and `~/Applications` on macOS) and the PATH. A `wav2textgrid.praat.path` set before loading the package (e.g., in `.Rprofile`) is respected, and the package no longer fails to load on systems other than macOS, Linux, and Windows.
+* `set_praat_path()` accepts a macOS `.app` bundle, warns when the path does not exist, and returns the path invisibly.
+* Praat script arguments are now quoted with `shQuote()`, so data folders containing `$`, backticks, or quotes are passed through safely.
+* Now depends on R >= 3.5.0 (for the `system2()` timeout).
 
 # 0.0.6
 

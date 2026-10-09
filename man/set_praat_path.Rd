@@ -7,8 +7,19 @@
 set_praat_path(path = NULL)
 }
 \arguments{
-\item{path}{The path to a Praat executable file. If NULL, then uses the default for the system.}
+\item{path}{The path to the Praat executable. On macOS this can also be the
+app bundle (e.g., "/Applications/Praat.app"). If NULL, searches the usual
+install locations for the system and the PATH.}
+}
+\value{
+The path, invisibly.
 }
 \description{
 This allows the user to define where their Praat installation is located if not in the default.
+}
+\details{
+The path is stored in \code{options(wav2textgrid.praat.path)}. Praat calls are
+stopped after \code{getOption("wav2textgrid.praat.timeout")} seconds (default 600)
+so a stuck Praat process cannot stall the pipeline; raise it for very long
+recordings, e.g. \code{options(wav2textgrid.praat.timeout = 1800)}.
 }
