@@ -57,8 +57,17 @@ endform"})
   script_file <- paste0(folder, "temp.praat")
   writeLines(script, con = script_file)
 
-  # run praat on the created script
-  run_praat(args = paste0('--run "', script_file, '" ', '"', folder, '" "" 1'))
+  # run praat on the created script (form args: directory, word, annotate silences)
+  run_praat(c("--run", shQuote(script_file), shQuote(folder), shQuote(""), "1"))
+
+  # confirm praat wrote a silences TextGrid for every channel file
+  wavs = fs::dir_ls(folder, regexp = "\\.wav$")
+  expected = paste0(wavs, "_silences.TextGrid")
+  missing = expected[!fs::file_exists(expected)]
+  if (length(missing) > 0)
+    stop("Praat ran but did not write the silences TextGrid for: ",
+         paste(fs::path_file(wavs[!fs::file_exists(expected)]), collapse = ", "),
+         call. = FALSE)
 
   # check output (only meaningful when there are two channels to compare)
   textgrid_to_check = fs::dir_ls(folder, regexp = "TextGrid$")
@@ -74,24 +83,82 @@ endform"})
 #' @description
 #' This allows the user to define where their Praat installation is located if not in the default.
 #'
-#' @param path The path to a Praat executable file. If NULL, then uses the default for the system.
+#' @param path The path to the Praat executable. On macOS this can also be the
+#' app bundle (e.g., "/Applications/Praat.app"). If NULL, searches the usual
+#' install locations for the system and the PATH.
+#'
+#' @details
+#' The path is stored in `options(wav2textgrid.praat.path)`. Praat calls are
+#' stopped after `getOption("wav2textgrid.praat.timeout")` seconds (default 600)
+#' so a stuck Praat process cannot stall the pipeline; raise it for very long
+#' recordings, e.g. `options(wav2textgrid.praat.timeout = 1800)`.
+#'
+#' @return The path, invisibly.
 #'
 #' @export
 set_praat_path <- function(path = NULL){
-  if (is.null(path)){
-    sys = Sys.info()[['sysname']]
+  if (is.null(path)) path = default_praat_path()
+  path = path.expand(path)
 
-    if (sys == "Darwin") path = "/Applications/Praat.app/Contents/MacOS/Praat"
-    if (sys == "Linux") path = "/usr/bin/praat"
-    if (sys == "Windows") path = "C:/Program Files/Praat.exe"
-  }
+  # accept the macOS app bundle and point at the executable inside it
+  if (grepl("\\.app/?$", path) && dir.exists(path))
+    path = file.path(sub("/$", "", path), "Contents", "MacOS", "Praat")
+
+  if (!file.exists(path) || dir.exists(path))
+    cli::cli_alert_warning(paste0("No Praat executable found at '", path, "'. Praat steps will fail until this is fixed."))
+
   options(wav2textgrid.praat.path = path)
+  invisible(path)
 }
 
 
-# run praat
-run_praat <- function(args){
-  system2(getOption("wav2textgrid.praat.path"), args)
+# first existing Praat executable among the usual install locations and the PATH;
+# falls back to the conventional location so messages can show where we looked
+default_praat_path <- function(){
+  sys = Sys.info()[["sysname"]]
+  candidates = switch(sys,
+    Darwin = c("/Applications/Praat.app/Contents/MacOS/Praat",
+               path.expand("~/Applications/Praat.app/Contents/MacOS/Praat")),
+    Windows = c("C:/Program Files/Praat/Praat.exe",
+                "C:/Program Files/Praat.exe",
+                "C:/Program Files (x86)/Praat/Praat.exe",
+                file.path(Sys.getenv("USERPROFILE"), "Desktop", "Praat.exe")),
+    c("/usr/bin/praat", "/usr/local/bin/praat", "/snap/bin/praat")
+  )
+  on_path = unname(Sys.which(c("praat", "Praat")))
+  candidates = unique(c(candidates, on_path[nzchar(on_path)]))
+  found = candidates[file.exists(candidates) & !dir.exists(candidates)]
+  if (length(found) > 0) found[1] else candidates[1]
+}
+
+
+# stop with an actionable message if the configured Praat executable is missing
+check_praat <- function(path = getOption("wav2textgrid.praat.path")){
+  if (is.null(path) || !nzchar(path) || !file.exists(path) || dir.exists(path))
+    stop("Praat was not found", if (!is.null(path)) paste0(" at '", path, "'"), ". ",
+         "Install Praat (https://www.fon.hum.uva.nl/praat/) or run ",
+         "`set_praat_path()` with the path to the Praat executable.", call. = FALSE)
+  path
+}
+
+
+# run praat, failing loudly on a non-zero exit status or a timeout
+run_praat <- function(args, timeout = getOption("wav2textgrid.praat.timeout", 600)){
+  praat = check_praat()
+  # system2() quotes the command itself; args are quoted by the caller
+  out = suppressWarnings(
+    system2(praat, args, stdout = TRUE, stderr = TRUE, timeout = timeout)
+  )
+  status = attr(out, "status")
+  if (!is.null(status) && status != 0){
+    if (status == 124)
+      stop("Praat did not finish within ", timeout, " seconds and was stopped. ",
+           "For long recordings, raise `options(wav2textgrid.praat.timeout = ...)`.",
+           call. = FALSE)
+    stop("Praat failed (exit status ", status, "). Praat output:\n",
+         paste(utils::tail(out, 20), collapse = "\n"), call. = FALSE)
+  }
+  invisible(out)
 }
 
 
@@ -135,4 +202,16 @@ check_shared_boundaries <- function(textgrid_files){
     cli::cli_alert_warning(paste0("The Silence/Sounding TextGrid for Channel 2 found ", round(max(c(min_overlap2, max_overlap2))*100, 1), "% of the boundaries were identical to Channel 1."))
     cli::cli_alert_warning("This suggests there is an issue with the threshold parameter (or others).")
   }
+}
+
+
+# read the silences TextGrid that praat wrote for one channel, failing with a
+# clear message (rather than an obscure read error) if it is missing
+read_silences <- function(folder, chan){
+  file = fs::dir_ls(folder, regexp = paste0("_ch", chan, "\\.wav_silences\\.TextGrid$"))
+  if (length(file) != 1)
+    stop("Expected one silences TextGrid for channel ", chan, " in ", folder,
+         " but found ", length(file), ". Did Praat run successfully in get_boundaries()?",
+         call. = FALSE)
+  readtextgrid::read_textgrid(file)
 }

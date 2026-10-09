@@ -27,6 +27,8 @@
 #' @param lowercase Should all text be lowercase? Default is FALSE.
 #' @param nonspeech What symbol should be used for non-speech? Default = "n" but can be any string.
 #' @param whisp the reticulated whisper model (e.g. produced via `whisper = reticulate::import("whisper"); model = whisper$load_model(model_type)`)
+#' @param language the spoken language passed to Whisper (default "en"); NULL lets Whisper detect it per segment. See [whispering()].
+#' @param drop_prompt_echo treat segments where Whisper repeated the prompt as non-speech (default TRUE). See [whispering()].
 #'
 #' @importFrom fs path_split
 #' @importFrom fs dir_ls
@@ -56,7 +58,9 @@ auto_textgrid <- function(
     remove_punct = FALSE,
     lowercase = FALSE,
     nonspeech = "n",
-    whisp = NULL
+    whisp = NULL,
+    language = "en",
+    drop_prompt_echo = TRUE
   ){
   # default prompt
   if (is.null(prompt)){
@@ -78,7 +82,7 @@ auto_textgrid <- function(
   # Step 3
   cli::cli_progress_step("Step 3 of 5")
   ch2 = if (length(step1) > 1) step1[2] else NULL
-  whispered = whispering(step1[1], ch2, folder = folder, model_type = model_type, prompt = prompt, whisp = whisp)
+  whispered = whispering(step1[1], ch2, folder = folder, model_type = model_type, prompt = prompt, whisp = whisp, language = language, drop_prompt_echo = drop_prompt_echo)
 
   # Step 4
   cli::cli_progress_step("\nStep 4 of 5")

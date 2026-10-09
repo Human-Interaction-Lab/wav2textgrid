@@ -10,12 +10,11 @@
   # python is first initialized (a user-bound environment still takes precedence)
   tryCatch(ensure_whisper(), error = function(e) invisible(NULL))
 
-  # find praat
-  sys = Sys.info()[['sysname']]
-  if (sys == "Darwin") path = "/Applications/Praat.app/Contents/MacOS/Praat"
-  if (sys == "Linux") path = "/usr/bin/praat"
-  if (sys == "Windows") path = "C:/Program Files/Praat.exe"
-  options(wav2textgrid.praat.path = path)
+  # find praat (keep a path the user already set, e.g. in their .Rprofile)
+  if (is.null(getOption("wav2textgrid.praat.path")))
+    options(wav2textgrid.praat.path = default_praat_path())
+  if (is.null(getOption("wav2textgrid.praat.timeout")))
+    options(wav2textgrid.praat.timeout = 600)
 
   # finish it up
   invisible()
@@ -26,7 +25,7 @@
 
   path = getOption("wav2textgrid.praat.path")
 
-  if (file.exists(path)){
+  if (!is.null(path) && file.exists(path) && !dir.exists(path)){
     packageStartupMessage(paste("Praat found at", path))
   } else
     packageStartupMessage(paste("Did not find Praat at default location (", path, ").\nPlease run `set_praat_path()` with the path to your Praat application."))

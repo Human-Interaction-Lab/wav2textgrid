@@ -22,7 +22,9 @@ auto_textgrid(
   remove_punct = FALSE,
   lowercase = FALSE,
   nonspeech = "n",
-  whisp = NULL
+  whisp = NULL,
+  language = "en",
+  drop_prompt_echo = TRUE
 )
 }
 \arguments{
@@ -67,6 +69,10 @@ Default prompts the use of backchannels, repetitions, and other conversational p
 \item{nonspeech}{What symbol should be used for non-speech? Default = "n" but can be any string.}
 
 \item{whisp}{the reticulated whisper model (e.g. produced via \verb{whisper = reticulate::import("whisper"); model = whisper$load_model(model_type)})}
+
+\item{language}{the spoken language passed to Whisper (default "en"); NULL lets Whisper detect it per segment. See \code{\link[=whispering]{whispering()}}.}
+
+\item{drop_prompt_echo}{treat segments where Whisper repeated the prompt as non-speech (default TRUE). See \code{\link[=whispering]{whispering()}}.}
 }
 \description{
 Takes all of the steps and puts them together to produce a textgrid from a
