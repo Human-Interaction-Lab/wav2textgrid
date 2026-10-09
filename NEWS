@@ -8,6 +8,10 @@
 * `set_praat_path()` accepts a macOS `.app` bundle, warns when the path does not exist, and returns the path invisibly.
 * Praat script arguments are now quoted with `shQuote()`, so data folders containing `$`, backticks, or quotes are passed through safely.
 * Now depends on R >= 3.5.0 (for the `system2()` timeout).
+* `whispering()` and `auto_textgrid()` gain `language` (default "en") so Whisper no longer guesses the language separately for every segment; use `language = NULL` for the previous auto-detect behavior.
+* A Whisper error on one segment no longer ends the run: the segment is treated as non-speech and a warning lists the failed segments with their times. If every segment of a channel fails, the run stops with Whisper's first error.
+* New `drop_prompt_echo` argument (default TRUE): segments where Whisper repeats the prompt back instead of transcribing are treated as non-speech, with a warning listing them.
+* Segments are now cut and converted one at a time during transcription instead of all up front (lower memory on long recordings), and the unused per-segment wav files are no longer written.
 
 # 0.0.6
 

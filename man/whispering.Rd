@@ -4,7 +4,16 @@
 \alias{whispering}
 \title{Whisper Transcription}
 \usage{
-whispering(ch1, ch2 = NULL, folder, model_type, prompt, whisp = NULL)
+whispering(
+  ch1,
+  ch2 = NULL,
+  folder,
+  model_type,
+  prompt,
+  whisp = NULL,
+  language = "en",
+  drop_prompt_echo = TRUE
+)
 }
 \arguments{
 \item{ch1}{channel 1 file}
@@ -18,7 +27,22 @@ whispering(ch1, ch2 = NULL, folder, model_type, prompt, whisp = NULL)
 \item{prompt}{Can prompt the model with words, names, spellings you want it to use.}
 
 \item{whisp}{the reticulated whisper model (e.g. produced via \verb{whisper = reticulate::import("whisper"); model = whisper$load_model(model_type)})}
+
+\item{language}{the spoken language passed to Whisper (default "en"). Setting
+it avoids Whisper guessing the language separately for every segment, which
+is unreliable on short segments (backchannels, single words). Use NULL to
+let Whisper detect the language.}
+
+\item{drop_prompt_echo}{Whisper sometimes repeats its prompt back on
+near-silent or unclear audio. If TRUE (default), segments whose text is
+mostly a verbatim run of the prompt are treated as non-speech, with a warning
+listing them.}
 }
 \description{
 Applies the OpenAI Whisper model to transcribe the conversation
+}
+\details{
+If Whisper errors on a segment, that segment is treated as non-speech and the
+run continues; a warning lists the failed segments with their times. If every
+segment of a channel fails, the run stops with Whisper's first error.
 }
