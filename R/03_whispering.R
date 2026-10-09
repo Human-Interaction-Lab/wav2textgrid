@@ -18,6 +18,10 @@
 #' listing them.
 #'
 #' @details
+#' Whisper is run with `temperature = 0` (greedy decoding, no random
+#' temperature fallback), so transcripts are reproducible across runs and very
+#' short segments do not trigger repeated, slow re-decoding.
+#'
 #' If Whisper errors on a segment, that segment is treated as non-speech and the
 #' run continues; a warning lists the failed segments with their times. If every
 #' segment of a channel fails, the run stops with Whisper's first error.
@@ -95,7 +99,8 @@ whisper_channel <- function(channel_file, chan, folder, model, prompt,
     res = tryCatch({
       audio_seg = seewave::cutw(audio, f = sample_freq, from = start, to = end, output = "Wave")
       model$transcribe(wave_to_whisper(audio_seg, sample_freq), fp16 = FALSE,
-                       initial_prompt = prompt, language = language)
+                       initial_prompt = prompt, language = language,
+                       temperature = 0)
     }, error = function(e) e)
 
     if (inherits(res, "error")){

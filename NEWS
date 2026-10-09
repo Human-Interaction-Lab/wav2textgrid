@@ -1,5 +1,6 @@
 # development version
 
+* Big Change: Whisper now runs with `temperature = 0`. Transcripts are reproducible across runs, and very short segments no longer trigger Whisper's random temperature fallback, which was slow (most of the transcription time on the example file) and could invent words.
 * Channels where Praat detects no speech no longer crash the pipeline. `whispering()` skips them with a warning (suggesting a lower `threshold`) and `clean_up()` gives that tier a single non-speech interval spanning the file. Previously `1:nrow()` iterated over an empty table and errored in `seewave::cutw()`.
 * Sounding intervals where Whisper returns no words are now labelled with the `nonspeech` symbol instead of the literal text "na".
 * A missing silences TextGrid (e.g., Praat failed to run) now gives a clear error pointing at `get_boundaries()`, and the file lookup uses an anchored, escaped pattern.
@@ -12,6 +13,9 @@
 * A Whisper error on one segment no longer ends the run: the segment is treated as non-speech and a warning lists the failed segments with their times. If every segment of a channel fails, the run stops with Whisper's first error.
 * New `drop_prompt_echo` argument (default TRUE): segments where Whisper repeats the prompt back instead of transcribing are treated as non-speech, with a warning listing them.
 * Segments are now cut and converted one at a time during transcription instead of all up front (lower memory on long recordings), and the unused per-segment wav files are no longer written.
+* TextGrids now end at the full duration of the audio: the last non-speech interval runs to the end of the file instead of the tier stopping at the last speech interval.
+* Zero-length intervals are no longer written (e.g., when speech starts at 0 s or runs to the very end of the file).
+* Double quotes in transcribed text are escaped as Praat requires (`""`), so quoted speech no longer corrupts the TextGrid.
 
 # 0.0.6
 

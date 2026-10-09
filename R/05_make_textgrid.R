@@ -44,7 +44,7 @@ make_textgrid <- function(data, wav_file){
         sprintf('        intervals [%d]:\n', i),
         sprintf('            xmin = %f\n', d_chan$start[i]),
         sprintf('            xmax = %f\n', xmax_end),
-        sprintf('            text = "%s"\n', d_chan$text[i])
+        sprintf('            text = "%s"\n', textgrid_escape(d_chan$text[i]))
       )
     }
 
@@ -56,4 +56,11 @@ make_textgrid <- function(data, wav_file){
   # Save the TextGrid to a file
   writeLines(textgrid, paste0(str_remove(wav_file, stringr::regex("\\.wav$", ignore_case = TRUE)), "_output.TextGrid"))
   invisible(textgrid)
+}
+
+
+# Praat text files escape a double quote inside a string by doubling it
+textgrid_escape <- function(text){
+  text[is.na(text)] = ""
+  gsub('"', '""', text, fixed = TRUE)
 }

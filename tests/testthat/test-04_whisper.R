@@ -38,6 +38,8 @@ test_that("language defaults to English and is passed to whisper", {
   fake <- fake_model(c("one", "two", "three"))
   run_channel(dir, fake)
   expect_true(all(vapply(fake$calls$args, function(a) identical(a$language, "en"), logical(1))))
+  # greedy decoding: reproducible, no random temperature fallback
+  expect_true(all(vapply(fake$calls$args, function(a) identical(a$temperature, 0), logical(1))))
 
   fake <- fake_model(c("one", "two", "three"))
   run_channel(dir, fake, language = NULL)

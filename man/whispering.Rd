@@ -42,6 +42,10 @@ listing them.}
 Applies the OpenAI Whisper model to transcribe the conversation
 }
 \details{
+Whisper is run with \code{temperature = 0} (greedy decoding, no random
+temperature fallback), so transcripts are reproducible across runs and very
+short segments do not trigger repeated, slow re-decoding.
+
 If Whisper errors on a segment, that segment is treated as non-speech and the
 run continues; a warning lists the failed segments with their times. If every
 segment of a channel fails, the run stops with Whisper's first error.

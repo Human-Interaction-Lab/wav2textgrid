@@ -116,7 +116,7 @@ clean_channel <- function(whispered, chan, folder, nonspeech){
   # add non-speech between sounding intervals
   non = chan_joined
   non$start1 = non$end
-  non$end1 = dplyr::lead(non$start)
+  non$end1 = dplyr::lead(non$start, default = silences$tier_xmax[1])  # last one runs to the end of the audio
   non = dplyr::select(non, start = start1, end = end1)
   non$text = nonspeech
   non$channel = chan
@@ -131,6 +131,8 @@ clean_channel <- function(whispered, chan, folder, nonspeech){
   chan_joined = dplyr::bind_rows(list(chan_joined, non, begin))
   chan_joined = dplyr::arrange(chan_joined, start)
   chan_joined = tidyr::fill(chan_joined, file:tier_xmax, .direction = "updown")
+  # drop zero-length padding (speech starting at 0 s or running to the very end)
+  chan_joined = chan_joined[chan_joined$end > chan_joined$start, ]
   return(chan_joined)
 }
 
