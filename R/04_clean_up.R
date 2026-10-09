@@ -76,25 +76,41 @@ clean_up <- function(whispered1, whispered2 = NULL, folder, remove_partial, hyph
 
 # join one channel's whisper text with its silence timings and pad non-speech
 clean_channel <- function(whispered, chan, folder, nonspeech){
+  # grab silences file
+  silences = read_silences(folder, chan)
+  colnames(silences)[which(colnames(silences) == "xmin")] = "start"
+  colnames(silences)[which(colnames(silences) == "xmax")] = "end"
+  sounding = silences[silences$text == "sounding", ]
+
+  # no speech on this channel: a single non-speech interval spanning the file
+  if (nrow(sounding) == 0){
+    empty = silences[1, ]
+    empty$start = 0
+    empty$end = silences$tier_xmax[1]
+    empty$text = nonspeech
+    empty$channel = chan
+    return(empty)
+  }
+
+  # one whisper result per sounding interval
+  if (length(whispered) != nrow(sounding))
+    stop("Channel ", chan, ": got ", length(whispered), " transcriptions for ",
+         nrow(sounding), " sounding intervals.", call. = FALSE)
+
   # grab segments
   segs = purrr::map(whispered, ~.x[["segments"]])
   lengths = purrr::map_dbl(segs, ~length(.x))
 
-  # extract text
+  # extract text (sounding intervals where whisper heard no words become non-speech)
   chan_text = text_single(lengths, segs)
   chan_text = tolower(chan_text)
   chan_text = stringr::str_squish(stringr::str_remove_all(chan_text, "\\.|\\,"))
+  chan_text[is.na(chan_text) | chan_text == ""] = nonspeech
   chan_text = data.frame(text = chan_text)
 
-  # grab silences file
-  silences = readtextgrid::read_textgrid(fs::dir_ls(folder, regexp = paste0("ch", chan, ".wav_silences")))
-  colnames(silences)[which(colnames(silences) == "xmin")] = "start"
-  colnames(silences)[which(colnames(silences) == "xmax")] = "end"
-  silences = silences[silences$text == "sounding", ]
-  silences = silences[, -which(colnames(silences) == "text")]
-
   # join with text
-  chan_joined = cbind(silences, chan_text)
+  sounding = sounding[, -which(colnames(sounding) == "text")]
+  chan_joined = cbind(sounding, chan_text)
   chan_joined$channel = chan
 
   # add non-speech between sounding intervals
@@ -136,7 +152,7 @@ text_single = function(lens, text){
   output = vector(mode = "character", length = length(lens))
   for (i in seq_along(text)){
     if (lens[i] == 0){
-      output[i] = "NA"
+      output[i] = NA_character_
     } else if (lens[i] > 0){
       for (y in 1:lens[i]){
         output[i] = paste(output[i], text[[i]][y][[1]]$text, collapse = " ")

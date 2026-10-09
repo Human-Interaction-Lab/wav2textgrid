@@ -45,9 +45,19 @@ whispering <- function(ch1, ch2 = NULL, folder, model_type, prompt, whisp = NULL
 # segment one channel file at its silence boundaries and transcribe each segment
 whisper_channel <- function(channel_file, chan, folder, model, prompt){
   # grab silence/sounding timings
-  silences = readtextgrid::read_textgrid(fs::dir_ls(folder, regexp = paste0("ch", chan, ".wav_silences")))
+  silences = read_silences(folder, chan)
   timings = silences[silences$text == "sounding", c("annotation_num", "xmin", "xmax")]
   colnames(timings) = c("annotation_num", "start", "end")
+
+  # nothing to transcribe if praat found no speech on this channel
+  # (clean_up() turns this channel into a single non-speech interval)
+  if (nrow(timings) == 0){
+    cli::cli_alert_warning(paste0(
+      "No speech detected on channel ", chan, "; its tier will be all non-speech. ",
+      "If that is unexpected, try a lower (more negative) `threshold`."
+    ))
+    return(list())
+  }
 
   # import channel
   audio = tuneR::readWave(channel_file)
@@ -56,7 +66,7 @@ whisper_channel <- function(channel_file, chan, folder, model, prompt){
   # create segmented audio
   duration = length(audio@left)/sample_freq
   segments = vector("list", length = nrow(timings))
-  for (i in 1:nrow(timings)){
+  for (i in seq_len(nrow(timings))){
     rows = timings[i,]
     start = max(rows$start - 0.2, 0)
     end = min(rows$end + 0.2, duration)

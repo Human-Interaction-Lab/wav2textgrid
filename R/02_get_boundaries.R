@@ -136,3 +136,15 @@ check_shared_boundaries <- function(textgrid_files){
     cli::cli_alert_warning("This suggests there is an issue with the threshold parameter (or others).")
   }
 }
+
+
+# read the silences TextGrid that praat wrote for one channel, failing with a
+# clear message (rather than an obscure read error) if it is missing
+read_silences <- function(folder, chan){
+  file = fs::dir_ls(folder, regexp = paste0("_ch", chan, "\\.wav_silences\\.TextGrid$"))
+  if (length(file) != 1)
+    stop("Expected one silences TextGrid for channel ", chan, " in ", folder,
+         " but found ", length(file), ". Did Praat run successfully in get_boundaries()?",
+         call. = FALSE)
+  readtextgrid::read_textgrid(file)
+}

@@ -1,3 +1,9 @@
+# development version
+
+* Channels where Praat detects no speech no longer crash the pipeline. `whispering()` skips them with a warning (suggesting a lower `threshold`) and `clean_up()` gives that tier a single non-speech interval spanning the file. Previously `1:nrow()` iterated over an empty table and errored in `seewave::cutw()`.
+* Sounding intervals where Whisper returns no words are now labelled with the `nonspeech` symbol instead of the literal text "na".
+* A missing silences TextGrid (e.g., Praat failed to run) now gives a clear error pointing at `get_boundaries()`, and the file lookup uses an anchored, escaped pattern.
+
 # 0.0.6
 
 * Added single channel (mono) support. `auto_textgrid()` gains a `channels` argument ("auto" by default): mono wav files are detected automatically and produce a single tier TextGrid, `channels = "mono"` mixes a stereo file down to one tier, and `channels = "stereo"` keeps the previous behavior of requiring a two channel file. `split_channels()` gains the same argument, and `whispering()`/`clean_up()` now accept `ch2 = NULL`/`whispered2 = NULL` for the single channel case.
